@@ -32,7 +32,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 ROOT = Path(__file__).parent
-COMPANIES = ["OpenAI", "Anthropic"]
+# kind=private -> post-money valuation; kind=public -> market capitalization
+# (market cap, not share price: NVDA split 10:1 in 2024-06, GOOGL 20:1 in
+# 2022-07, so share price is not comparable across cutoffs).
+COMPANIES = [
+    {"name": "OpenAI", "kind": "private"},
+    {"name": "Anthropic", "kind": "private"},
+    {"name": "NVIDIA", "kind": "public"},
+    {"name": "Alphabet (Google)", "kind": "public"},
+    {"name": "Meta Platforms", "kind": "public"},
+]
 TARGET_DATES = [f"{y}-01-01" for y in range(2024, 2031)]
 
 SYSTEM_PROMPT = (
@@ -41,13 +50,29 @@ SYSTEM_PROMPT = (
     "know today's date; reason from what you know."
 )
 
-QUESTION = """\
+QUESTION_PRIVATE = """\
 What is your best estimate of the valuation of {company} (the AI company) on \
 {date_human}?
 
 Valuation means the most recent post-money valuation from a primary funding \
 round or tender offer/secondary transaction as of that date. If that date is \
 beyond your knowledge, produce your best forecast from what you know.
+
+This is a forecasting exercise: a speculative estimate is required and \
+expected. You must NOT refuse, hedge with "unknown", or leave the number \
+blank — reason from base rates, growth trends, and whatever you know about \
+the company, then commit to a single number.
+
+Think it through, then end your reply with exactly one line in this format \
+(USD billions, a single positive number, no other text on the line):
+FINAL: <number>"""
+
+QUESTION_PUBLIC = """\
+What is your best estimate of the total market capitalization of {company} on \
+{date_human}?
+
+If that date is beyond your knowledge, produce your best forecast from what \
+you know.
 
 This is a forecasting exercise: a speculative estimate is required and \
 expected. You must NOT refuse, hedge with "unknown", or leave the number \
@@ -88,8 +113,10 @@ def question_grid(models: list[dict], include_unknown: bool) -> list[dict]:
             for date in TARGET_DATES:
                 if date[:7] <= cutoff:  # target in/before cutoff month -> recall, skip
                     continue
-                grid.append({"model": m["id"], "family": m["family"],
-                             "cutoff": cutoff, "company": company, "target_date": date})
+                grid.append({"model": m["id"], "family": m["family"], "cutoff": cutoff,
+                             "reasoning": m.get("reasoning", False),
+                             "company": company["name"], "kind": company["kind"],
+                             "target_date": date})
     return grid
 
 
@@ -101,11 +128,15 @@ NUDGE = (
 )
 
 
-async def chat(client: httpx.AsyncClient, model: str, messages: list[dict]) -> dict:
+async def chat(client: httpx.AsyncClient, model: str, messages: list[dict],
+               reasoning: bool) -> dict:
+    body = {"model": model, "messages": messages, "plugins": []}  # plugins=[]: no web search
+    if reasoning:
+        body["reasoning"] = {"effort": "medium"}  # standard thinking where supported
     r = await client.post(
         "https://openrouter.ai/api/v1/chat/completions",
         headers={"Authorization": f"Bearer {os.environ['OPENROUTER_API_KEY']}"},
-        json={"model": model, "messages": messages, "plugins": []},  # plugins=[]: no web search
+        json=body,
         timeout=600,
     )
     r.raise_for_status()
@@ -114,19 +145,28 @@ async def chat(client: httpx.AsyncClient, model: str, messages: list[dict]) -> d
 
 async def ask(client: httpx.AsyncClient, q: dict, sample_idx: int) -> dict:
     date_human = datetime.strptime(q["target_date"], "%Y-%m-%d").strftime("%B %-d, %Y")
+    template = QUESTION_PRIVATE if q["kind"] == "private" else QUESTION_PUBLIC
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": QUESTION.format(company=q["company"], date_human=date_human)},
+        {"role": "user", "content": template.format(company=q["company"], date_human=date_human)},
     ]
     rec = {**q, "sample": sample_idx, "ts": datetime.now(UTC).isoformat(), "nudged": False}
+    reasoning = q.get("reasoning", False)
     try:
-        data = await chat(client, q["model"], messages)
+        try:
+            data = await chat(client, q["model"], messages, reasoning)
+        except httpx.HTTPStatusError as exc:
+            if not (reasoning and exc.response.status_code in (400, 404)):
+                raise
+            reasoning = False  # provider rejected reasoning param; retry without
+            rec["reasoning"] = False
+            data = await chat(client, q["model"], messages, reasoning)
         msg = data["choices"][0]["message"]
         value = parse_final(msg.get("content") or "")
         if value is None:  # refusal or bad format: one follow-up nudge in-conversation
             messages += [{"role": "assistant", "content": msg.get("content") or ""},
                          {"role": "user", "content": NUDGE}]
-            data = await chat(client, q["model"], messages)
+            data = await chat(client, q["model"], messages, reasoning)
             msg = data["choices"][0]["message"]
             value = parse_final(msg.get("content") or "")
             rec["nudged"] = True

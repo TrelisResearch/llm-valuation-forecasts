@@ -1,0 +1,6 @@
+{"OpenAI": {"2024-01-01": 86, "2025-01-01": 157, "2026-01-01": 500, "latest": 852, "notes": "86B tender led by Thrive (closed ~Jan 2024, reported from Oct 2023); 157B Oct-2024 round ($6.6B raised); 500B Oct-2025 secondary/tender ($6.6B employee sale); 852B Mar-2026 round ($122B raised, Amazon/Nvidia/SoftBank)"},
+ "Anthropic": {"2024-01-01": 18.4, "2025-01-01": 40, "2026-01-01": 183, "latest": 965, "notes": "18.4B Series D Jan-2024; ~40B reflects Nov-2024 Amazon $4B add-on reported valuation (Series E 61.5B closed Mar-2025, just after Jan-1-2025); 183B Sep-2025 Series F; 965B May-2026 Series H (post 380B Feb-2026 Series G)"},
+ "NVIDIA": {"2024-01-01": 1200, "2025-01-01": 3300, "2026-01-01": 4600, "latest": 5100, "notes": "Dec-29-2023 close ~$1.2T; Dec-31-2024 close ~$3.3T ($134.25/sh); Dec-31-2025 close ~$4.6T ($186.27/sh); mid-Jul-2026 ~$5.0-5.15T"},
+ "Alphabet (Google)": {"2024-01-01": 1750, "2025-01-01": 2300, "2026-01-01": 3780, "latest": 4300, "notes": "Dec-29-2023 close ~$1.75T ($138.54/sh GOOGL); Dec-31-2024 ~$2.3T ($188.56/sh); Dec-31-2025 ~$3.78T; mid-Jul-2026 ~$4.2-4.33T"},
+ "Meta Platforms": {"2024-01-01": 925.8, "2025-01-01": 1520, "2026-01-01": 1670, "latest": 1686, "notes": "Dec-29-2023 close $925.8B ($352.03/sh); Dec-31-2024 ~$1.52T ($582.63/sh); Dec-31-2025 ~$1.67T; mid-Jul-2026 ~$1.68-1.73T"},
+ "as_of": "2026-07-18"}

@@ -1,9 +1,26 @@
 # LLM Valuation Forecasts by Knowledge Cutoff
 
 Ask models from the same families — but with different knowledge cutoffs — to
-estimate/forecast the valuation of OpenAI and Anthropic at Jan 1 targets
-(2024 through 2030). Because each model's knowledge stops at its cutoff, a
-lineage gives a natural panel of "forecasters frozen at different dates".
+estimate/forecast the valuation of OpenAI and Anthropic (post-money) and the
+market cap of NVIDIA, Alphabet and Meta at Jan 1 targets (2024 through 2030).
+Because each model's knowledge stops at its cutoff, a lineage gives a natural
+panel of "forecasters frozen at different dates".
+
+Market cap (not share price) for the public companies: NVDA split 10:1 in
+Jun 2024 and GOOGL 20:1 in Jul 2022, so share price is not comparable across
+cutoffs.
+
+## Pipeline
+
+```bash
+uv run run_experiment.py                           # full run -> results/*.jsonl
+uv run analysis/aggregate.py results/run_X.jsonl   # -> site/data.json
+uv run analysis/make_assets.py                     # -> assets/*.png, *.mp4
+npx wrangler pages deploy site                     # deploy the site
+```
+
+Reasoning models run at standard effort (`reasoning: {effort: "medium"}`);
+providers that reject the parameter fall back to no reasoning (logged).
 
 ## Design
 

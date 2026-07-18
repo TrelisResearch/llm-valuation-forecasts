@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Valuation Forecasts by Knowledge Cutoff</title>
+<meta name="description" content="What AI models of different training vintages think OpenAI, Anthropic, NVIDIA, Alphabet and Meta are worth — and how those beliefs evolved as knowledge cutoffs advanced.">
+<style>
+:root { color-scheme: light dark; }
+.viz-root {
+  color-scheme: light;
+  --surface-1: #fcfcfb; --page: #f9f9f7;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --actual: #e34948;
+  --cohort-2021: #86b6ef; --cohort-2023: #5598e7; --cohort-2024: #2a78d6;
+  --cohort-2025: #1c5cab; --cohort-2026: #0d366b;
+  --fam-1: #2a78d6; --fam-2: #008300; --fam-3: #e87ba4;
+  --fam-4: #eda100; --fam-5: #1baf7a; --fam-6: #eb6834;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --surface-1: #1a1a19; --page: #0d0d0d;
+    --text-primary: #ffffff; --text-secondary: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --actual: #e66767;
+    --cohort-2021: #184f95; --cohort-2023: #256abf; --cohort-2024: #3987e5;
+    --cohort-2025: #6da7ec; --cohort-2026: #b7d3f6;
+    --fam-1: #3987e5; --fam-2: #008300; --fam-3: #d55181;
+    --fam-4: #c98500; --fam-5: #199e70; --fam-6: #d95926;
+  }
+}
+* { box-sizing: border-box; margin: 0; }
+body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.viz-root { background: var(--page); color: var(--text-primary); min-height: 100vh; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 32px 20px 64px; }
+header h1 { font-size: 1.6rem; line-height: 1.25; margin-bottom: 8px; }
+header p.sub { color: var(--text-secondary); max-width: 62ch; font-size: .95rem; line-height: 1.5; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+        padding: 18px 18px 12px; margin-top: 24px; }
+.card h2 { font-size: 1.05rem; margin-bottom: 2px; }
+.card p.note { color: var(--text-secondary); font-size: .85rem; margin-bottom: 10px; max-width: 75ch; }
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.panel h3 { font-size: .85rem; font-weight: 600; margin: 4px 0 2px 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+          font-size: .8rem; color: var(--text-secondary); padding: 6px 4px 10px; }
+.legend .item { display: flex; gap: 6px; align-items: center; }
+.legend .swatch { width: 14px; height: 3px; border-radius: 2px; }
+.legend .swatch.dot { width: 8px; height: 8px; border-radius: 50%; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 0 12px; }
+.controls .seg { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--border);
+                 border-radius: 8px; overflow: hidden; }
+.controls button { font: inherit; font-size: .82rem; padding: 6px 12px; border: 0;
+                   background: transparent; color: var(--text-secondary); cursor: pointer; }
+.controls button[aria-pressed="true"] { background: var(--cohort-2024); color: #fff; }
+svg text { font-family: inherit; }
+.tooltip { position: fixed; pointer-events: none; background: var(--surface-1);
+           border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+           font-size: .78rem; color: var(--text-primary); box-shadow: 0 4px 14px rgba(0,0,0,.18);
+           max-width: 280px; z-index: 10; display: none; }
+.tooltip .t-head { font-weight: 600; margin-bottom: 2px; }
+.tooltip .t-sub { color: var(--text-secondary); }
+table { border-collapse: collapse; width: 100%; font-size: .82rem; }
+th, td { text-align: right; padding: 5px 10px; border-bottom: 1px solid var(--grid);
+         font-variant-numeric: tabular-nums; }
+th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+th { color: var(--text-secondary); font-weight: 600; }
+details summary { cursor: pointer; color: var(--text-secondary); font-size: .85rem; padding: 4px 0; }
+footer { margin-top: 28px; color: var(--muted); font-size: .8rem; line-height: 1.6; max-width: 75ch; }
+footer a { color: var(--text-secondary); }
+</style>
+</head>
+<body>
+<div class="viz-root">
+<div class="wrap">
+  <header>
+    <h1>What do AI models think these companies are worth?</h1>
+    <p class="sub">The same question — “what is the valuation of X on January 1, {2024–2030}?” —
+    asked of 26 models whose knowledge cutoffs span September 2021 to February 2026,
+    with no internet access. Each line is a cutoff vintage: darker means the model’s
+    knowledge stops later. Red is what actually happened.</p>
+  </header>
+
+  <section class="card" id="headline">
+    <h2>Forecasts vs reality, by knowledge-cutoff vintage</h2>
+    <p class="note">Median forecast across all models sharing a cutoff year (3 samples per
+    model per question, log scale, USD billions). Targets a model could already “know” are excluded.</p>
+    <div class="legend" id="headline-legend"></div>
+    <div class="panels" id="headline-panels"></div>
+  </section>
+
+  <section class="card" id="explorer">
+    <h2>Per-model forecasts</h2>
+    <p class="note">Every model’s own median trajectory, colored by family. Hover for details.</p>
+    <div class="controls"><div class="seg" id="company-seg" role="group" aria-label="Company"></div></div>
+    <div class="legend" id="explorer-legend"></div>
+    <div id="explorer-chart"></div>
+  </section>
+
+  <section class="card" id="evolution">
+    <h2>How the belief evolved with the cutoff</h2>
+    <p class="note">Fix a target date; each dot is one model’s median forecast for it, placed at
+    that model’s knowledge cutoff. The line joins cutoff-cohort medians — belief revision in slow motion.</p>
+    <div class="controls">
+      <div class="seg" id="evo-company-seg" role="group" aria-label="Company"></div>
+      <div class="seg" id="evo-target-seg" role="group" aria-label="Target date"></div>
+    </div>
+    <div id="evolution-chart"></div>
+  </section>
+
+  <section class="card">
+    <details><summary>Data table (cohort medians, USD billions)</summary>
+      <div style="overflow-x:auto"><table id="data-table"></table></div>
+    </details>
+  </section>
+
+  <footer id="method"></footer>
+</div>
+<div class="tooltip" id="tooltip"></div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
