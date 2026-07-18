@@ -5,7 +5,8 @@ Cutoff cohorts = cutoff year (2021, 2023, 2024, 2025, 2026); cohort series =
 median across all models in the cohort. Ground truth merged from
 analysis/ground_truth.json.
 
-Usage: uv run analysis/aggregate.py results/run_XXXX.jsonl
+Usage: uv run analysis/aggregate.py results/run_XXXX.jsonl [more.jsonl ...]
+Later files fill in records that failed in earlier ones (retry runs).
 """
 
 import json
@@ -21,7 +22,9 @@ ROOT = Path(__file__).parent.parent
 
 def main() -> None:
     run_path = Path(sys.argv[1])
-    recs = [json.loads(l) for l in run_path.read_text().splitlines()]
+    recs = []
+    for arg in sys.argv[1:]:
+        recs += [json.loads(l) for l in Path(arg).read_text().splitlines()]
     ok = [r for r in recs if r.get("valuation_billions") is not None]
     n_err = sum("error" in r for r in recs)
     n_unparsed = len(recs) - len(ok) - n_err

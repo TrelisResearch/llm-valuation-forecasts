@@ -130,7 +130,9 @@ NUDGE = (
 
 async def chat(client: httpx.AsyncClient, model: str, messages: list[dict],
                reasoning: bool) -> dict:
-    body = {"model": model, "messages": messages, "plugins": []}  # plugins=[]: no web search
+    # max_tokens caps OpenRouter's per-request credit hold (402s otherwise on
+    # expensive models at high concurrency); generous enough for medium thinking.
+    body = {"model": model, "messages": messages, "plugins": [], "max_tokens": 16000}
     if reasoning:
         body["reasoning"] = {"effort": "medium"}  # standard thinking where supported
     r = await client.post(
@@ -188,12 +190,24 @@ async def main() -> None:
     ap.add_argument("--include-unknown", action="store_true",
                     help="also run models whose cutoff is unverified (all targets asked)")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--retry", help="results file: re-run only its error records")
     args = ap.parse_args()
 
-    models = load_models(ROOT / "config" / "models.yaml")
-    if args.models:
-        models = [m for m in models if m["id"] in set(args.models)]
-    grid = question_grid(models, args.include_unknown)
+    if args.retry:
+        failed = [json.loads(l) for l in Path(args.retry).read_text().splitlines()]
+        grid, seen = [], set()
+        for r in failed:
+            key = (r["model"], r["company"], r["target_date"], r["sample"])
+            if "error" in r and key not in seen:
+                seen.add(key)
+                grid.append({k: r[k] for k in ("model", "family", "cutoff", "reasoning",
+                                               "company", "kind", "target_date")})
+        args.samples = 1  # sample identity preserved implicitly; one retry per failure
+    else:
+        models = load_models(ROOT / "config" / "models.yaml")
+        if args.models:
+            models = [m for m in models if m["id"] in set(args.models)]
+        grid = question_grid(models, args.include_unknown)
 
     print(f"{len(grid)} questions x {args.samples} samples = {len(grid) * args.samples} calls")
     if args.dry_run:
