@@ -140,7 +140,7 @@ def legend_on(fig, t):
                labelcolor=t["sub"])
 
 
-TITLE = "What did AI models think these companies would be worth?"
+TITLE = "What does AI think AI companies are worth?"
 SUBTITLE = ("Models with knowledge cutoffs from Sep 2021 (light) to Feb 2026 (dark) forecast "
             "valuations for Jan 1, 2024–2030 — red shows what actually happened.")
 

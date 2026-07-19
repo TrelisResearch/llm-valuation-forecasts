@@ -6,6 +6,8 @@ Assets (in `assets/`): attach per tweet as noted.
 
 ## Tweet 1 — attach: headline_reveal.mp4 (or headline_light.png)
 
+What does AI think AI companies are worth?
+
 I asked 26 AI models — knowledge cutoffs from Sept 2021 to Feb 2026, no internet access — what OpenAI, Anthropic, NVIDIA, Google & Meta would be worth every Jan 1 through 2030.
 
 Blue = model forecasts by vintage (darker = later cutoff). Red = what actually happened.
