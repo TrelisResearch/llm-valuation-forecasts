@@ -16,12 +16,20 @@ Blue = model forecasts by vintage (darker = later cutoff). Red = what actually h
 
 ## Tweet 2 — attach: growth_rates.png
 
-The models aren't extrapolating hype. They forecast like a finance textbook:
+For public companies, the models appear not to extrapolate the hype - and so real valuations have outpaced model median predictions.
 
-• Public companies: ~8–10%/yr — the required rate of return (anything predictable is already in the price)
-• Startups: growth that fades with size — ~30%/yr while "small," ~20%/yr further out, and once told the valuation is ~$1T, the same ~6–10%/yr they give the mega-caps.
+For private companies, models appear to price in momentum, and predict faster growth rates than what I think textbook economics should allow.
+
+• Public companies: ~8–10%/yr - the required rate of return (anything predictable is already in the price)
+• Startups: venture rates, ~25–35%/yr
 
 Reality: NVIDIA +78%/yr, OpenAI +150%/yr, Anthropic +387%/yr.
+
+Interestingly, and I don't have a great explanation:
+
+1. Predicted private company growth rates fall to the public 8-10% range if you provide a current company valuation to the model. [It's conceivable that models without this are marking up the fact that private market valuations will always be somewhat out of date at the model cut off, but this should be a one-off lift, not an increased slope in valuations].
+
+2. The LLMs do predict reasonable power law valuation distributions for private companies, and more log normal for public companies. So, the textbook distribution is present, but the models deviate when asked for growth without a grounding current valuation. [We checked whether "point estimate" vs "median" phrasing explains it - it doesn't: unanchored point estimates match unanchored medians almost exactly. The growth rate a model predicts genuinely depends on what it believes the company is currently worth.]
 
 ---
 
