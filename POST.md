@@ -19,7 +19,7 @@ Blue = model forecasts by vintage (darker = later cutoff). Red = what actually h
 The models aren't extrapolating hype. They forecast like a finance textbook:
 
 • Public companies: ~8–10%/yr — the required rate of return (anything predictable is already in the price)
-• Startups: ~25–35%/yr on paper — but most of that is catch-up from stale training data. Hand them today's actual valuation and they forecast ~6–10%/yr there too.
+• Startups look steeper (~25–35%/yr), but that's re-pricing a stale funding-round mark, not growth optimism. Give them the latest valuation and they project the same ~6–10%/yr as the public cos.
 
 Reality: NVIDIA +78%/yr, OpenAI +150%/yr, Anthropic +387%/yr.
 

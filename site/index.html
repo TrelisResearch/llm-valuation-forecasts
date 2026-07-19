@@ -103,12 +103,15 @@ footer a { color: var(--text-secondary); }
   <section class="card" id="growth">
     <h2>2 · The models weren’t guessing — they priced like a finance textbook</h2>
     <p class="note">Convert each vintage’s forecast curve into an annual growth rate and a clean
-    pattern appears: ~8–10%/yr for the public companies (the “required rate of return” — in an
-    efficient market, faster predictable growth would already be in the price) and venture-style
-    rates for the startups. One caveat on the startup rates: much of that slope is catch-up from
-    stale training-data valuations — in a follow-up probe where models were told the true current
-    valuation, their median startup forecast dropped to ~6–10%/yr, the same required-return logic
-    as the public companies. Reality (red) grew several times faster than any of it.</p>
+    pattern appears. For the public companies: ~8–10%/yr — the required rate of return, since a
+    current market price already contains everything predictable. The startups <em>look</em>
+    different at ~25–35%/yr, but that steepness is <b>re-pricing, not growth optimism</b>: a
+    startup’s last known valuation is a stale funding-round mark, often long before the model’s
+    knowledge ends, so the textbook forecast is that the next mark lands far above the old one.
+    The proof: hand the same models the actual latest valuation (information newer than their
+    cutoff) and their startup forecasts drop to the same ~6–10%/yr they give the public
+    companies. One pricing logic everywhere — reality (red) simply grew several times faster
+    than it.</p>
     <div class="legend" id="growth-legend"></div>
     <div id="growth-chart"></div>
   </section>
