@@ -76,12 +76,11 @@ footer a { color: var(--text-secondary); }
 <div class="wrap">
   <header>
     <h1>What do AI models think these companies are worth?</h1>
-    <p class="sub">The same question — “what is the valuation of X on January 1, {2024–2030}?” —
-    asked of 26 models whose knowledge cutoffs span September 2021 to February 2026,
-    with no internet access. Each line is a cutoff vintage: darker means the model’s
-    knowledge stops later. Red is what actually happened. Below the headline:
-    why the point estimates mislead — the same models carry ~45% downside
-    probability that a single “best estimate” never shows.</p>
+    <p class="sub">We asked 26 AI models — with knowledge cutoffs from September 2021 to
+    February 2026, and no internet access — what OpenAI, Anthropic, NVIDIA, Alphabet and
+    Meta would be worth on each January 1 from 2024 to 2030. The story in one line:
+    <b>the models forecast like a finance textbook — sensible growth rates, the right
+    distribution shapes — and reality beat their expectations almost every time.</b></p>
     <p class="sub" style="margin-top:6px">
       <a href="https://github.com/TrelisResearch/llm-valuation-forecasts">github.com/TrelisResearch/llm-valuation-forecasts</a>
       · by <a href="https://x.com/ronankmcgovern">@ronankmcgovern</a>
@@ -89,46 +88,68 @@ footer a { color: var(--text-secondary); }
   </header>
 
   <section class="card" id="headline">
-    <h2>Forecasts vs reality, by knowledge-cutoff vintage</h2>
-    <p class="note">Median forecast across all models sharing a cutoff year (3 samples per
-    model per question, log scale, USD billions). Targets a model could already “know” are excluded.</p>
+    <h2>1 · What the models predicted — and what happened</h2>
+    <p class="note">Each blue line is a “vintage” of models grouped by the year their knowledge
+    ends (darker = knows more recent history). Red is reality. Every vintage revised upward as
+    its knowledge advanced — and reality still escaped above the lot. Log scale, USD billions;
+    dates a model could already know are excluded.</p>
     <div class="legend" id="headline-legend"></div>
     <div class="panels" id="headline-panels"></div>
   </section>
 
+  <section class="card" id="growth">
+    <h2>2 · The models weren’t guessing — they priced like a finance textbook</h2>
+    <p class="note">Convert each vintage’s forecast curve into an annual growth rate and a clean
+    pattern appears: ~8–10%/yr for the public companies (the “required rate of return” — in an
+    efficient market, faster predictable growth would already be in the price) and venture-style
+    rates for the startups. Reality (red) grew several times faster than any of it.</p>
+    <div class="legend" id="growth-legend"></div>
+    <div id="growth-chart"></div>
+  </section>
+
+  <section class="card" id="tails">
+    <h2>3 · They even believe the “right” shapes: startups are power-law, stocks are lognormal</h2>
+    <p class="note">We asked each model: what’s the chance the company is worth 1.5×, 2×, 5×…
+    100× today’s value in 2030? Plotted on log-log axes, a straight line means a power law.
+    For Anthropic the models draw near-straight lines with tail exponent α ≈ 1.4–2.0 — the same
+    range measured for real venture returns. For NVIDIA the curves bend downward: thinner,
+    lognormal-like tails, the standard model for public equities. Hover any point for exact values.</p>
+    <div class="controls"><div class="seg" id="tails-subject-seg" role="group" aria-label="Company"></div></div>
+    <div id="tails-chart"></div>
+  </section>
+
   <section class="card" id="distributions">
-    <h2>The flaw in point estimates: the downside mass they hide</h2>
-    <p class="note">Asked for a single “best estimate” of a 2030 valuation, models draw a smooth
-    success path. Asked for their full distribution (anchored on the same current valuation),
-    the same models place large probability on decline. The band spans each model’s 10th–90th
-    percentile with a dot at the median; the green marker is the same model’s point estimate
-    from the main experiment. Note the green markers sit below the medians for a reason worth
-    knowing: the main experiment gave no anchor, so models forecast from their (stale, lower)
-    training-data knowledge of the valuation — handed the true current number, their median
-    forecast implies only ~6–10%/yr growth, close to a required rate of return. Name-blinded
-    twins test whether famous names get rosier odds (mostly: no).</p>
+    <h2>4 · So why do their answers look so rosy? Ask for one number and the risk disappears</h2>
+    <p class="note">The same model, the same question, asked two ways. Asked for a single “best
+    estimate” of a 2030 valuation (green dot), a model tells a smooth success story. Asked for
+    its full range of outcomes — 10th percentile, median, 90th percentile (blue band and dot) —
+    the same model admits enormous uncertainty, including a large chance the company is worth
+    <em>less</em> than today (dashed line). If you use an LLM’s single-number answer, you
+    inherit a forecast that quietly assumes things go well. (The green dots also sit low because
+    those questions gave no current valuation, so models anchored on older knowledge.)</p>
     <div class="controls"><div class="seg" id="dist-question-seg" role="group" aria-label="Scenario"></div></div>
     <div class="legend" id="dist-legend"></div>
     <div id="dist-chart"></div>
-    <h2 style="margin-top:22px">P(worth less in 2030 than today)</h2>
-    <p class="note">Each model’s stated probability that the company’s value on Jan 1, 2030 is
-    below its current valuation. A fairly-priced, venture-volatility asset sits around 35–45%
-    (shaded). Point estimates carry none of this.</p>
+    <h2 style="margin-top:22px">Chance the company is worth <em>less</em> in 2030 than today — according to the models</h2>
+    <p class="note">For a fairly-priced, high-volatility asset this should sit around 35–45%
+    (shaded band) — and the models mostly agree. None of this risk is visible in any
+    single-number answer they give.</p>
     <div id="pbelow-chart"></div>
   </section>
 
   <section class="card" id="calibration">
-    <h2>Hindsight calibration: where did reality land in the models’ own distributions?</h2>
-    <p class="note">For past targets (Jan 2024 → Jul 2026) we elicited full p10/p50/p90
-    distributions — unanchored, so each model forecasts from its own knowledge — and checked
-    where the realized valuation fell. A calibrated forecaster puts ~10% of outcomes above its
-    90th percentile. The observed rate is the red segment.</p>
+    <h2>5 · The catch: reality beat even their generous ranges</h2>
+    <p class="note">For dates that have already happened (Jan 2024 → Jul 2026), we asked models
+    for their 10th/50th/90th percentile ranges and checked where the real valuation landed.
+    A well-calibrated forecaster is beaten above its 90th percentile ~10% of the time (top
+    reference row). It happened 69% of the time — 85% for the startups. Right theory,
+    wrong magnitude.</p>
     <div class="legend" id="calib-legend"></div>
     <div id="calib-chart"></div>
   </section>
 
   <section class="card" id="explorer">
-    <h2>Per-model forecasts</h2>
+    <h2>Explore · Per-model forecasts</h2>
     <p class="note">Every model’s own median trajectory, colored by family. Hover for details.</p>
     <div class="controls"><div class="seg" id="company-seg" role="group" aria-label="Company"></div></div>
     <div class="legend" id="explorer-legend"></div>
@@ -136,7 +157,7 @@ footer a { color: var(--text-secondary); }
   </section>
 
   <section class="card" id="evolution">
-    <h2>How the belief evolved with the cutoff</h2>
+    <h2>Explore · How beliefs shifted as knowledge advanced</h2>
     <p class="note">Fix a target date; each dot is one model’s median forecast for it, placed at
     that model’s knowledge cutoff. The line joins cutoff-cohort medians — belief revision in slow motion.</p>
     <div class="controls">

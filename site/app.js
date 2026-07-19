@@ -4,7 +4,7 @@
 
 const NS = "http://www.w3.org/2000/svg";
 const tooltip = document.getElementById("tooltip");
-let DATA = null, PROBE = null, CALIB = null;
+let DATA = null, PROBE = null, CALIB = null, TAILS = null;
 let state = { company: "OpenAI", evoCompany: "OpenAI", evoTarget: "2030-01-01",
               distQuestion: "named-anthropic" };
 
@@ -73,11 +73,12 @@ function lineChart(container, series, opts) {
       const v = mult * Math.pow(10, d);
       if (v >= yLo && v <= yHi) yTicks.push(v);
     }
+  const yFmt = opts.yFmt || fmtB;
   for (const v of yTicks) {
     el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v),
                  stroke: css("--grid"), "stroke-width": 1 }, svg);
     el("text", { x: m.l - 6, y: Y(v) + 3, "text-anchor": "end", "font-size": 9.5,
-                 fill: css("--muted") }, svg).textContent = fmtB(v);
+                 fill: css("--muted") }, svg).textContent = yFmt(v);
   }
   const xTicks = opts.xTicks || [];
   for (const t of xTicks) {
@@ -266,6 +267,109 @@ function renderEvolution() {
   });
 }
 
+/* ---------- growth: implied CAGR dot plot vs realized ---------- */
+function impliedCagr(company, cohort) {
+  const pts = DATA.cohorts.filter(c => c.company === company && c.cohort === cohort)
+    .map(c => [Number(c.target.slice(0, 4)), Math.log(c.median)]);
+  if (pts.length < 2) return null;
+  const mx = pts.reduce((s, p) => s + p[0], 0) / pts.length;
+  const my = pts.reduce((s, p) => s + p[1], 0) / pts.length;
+  const slope = pts.reduce((s, p) => s + (p[0] - mx) * (p[1] - my), 0) /
+                pts.reduce((s, p) => s + (p[0] - mx) ** 2, 0);
+  return Math.exp(slope) - 1;
+}
+
+function renderGrowth() {
+  const companies = ["NVIDIA", "Alphabet (Google)", "Meta Platforms", "OpenAI", "Anthropic"];
+  const cohortYears = [...new Set(DATA.cohorts.map(c => c.cohort))].sort();
+  const blue = css("--cohort-2024"), red = css("--actual");
+  document.getElementById("growth-legend").innerHTML =
+    `<span class="item"><span class="swatch dot" style="background:${blue}"></span>model-implied growth (median &amp; range across vintages)</span>
+     <span class="item"><span class="swatch dot" style="background:${red}"></span>realized, Jan 2024 → Jul 2026</span>`;
+
+  const W = 1080, rowH = 52, m = { l: 110, r: 30, t: 34, b: 40 };
+  const H = companies.length * rowH + m.t + m.b;
+  const svg = distSvg(document.getElementById("growth-chart"), W, H,
+                      "implied annual growth vs realized, per company");
+  const X = (rate) => {  // log scale over 4%..500%
+    const lo = Math.log(0.04), hi = Math.log(5);
+    return m.l + (Math.log(Math.max(rate, 0.04)) - lo) / (hi - lo) * (W - m.l - m.r);
+  };
+  // theory bands
+  const band = (a, b, label) => {
+    el("rect", { x: X(a), y: m.t, width: X(b) - X(a), height: H - m.t - m.b,
+                 fill: css("--grid"), opacity: 0.5 }, svg);
+    el("text", { x: (X(a) + X(b)) / 2, y: m.t - 8, "text-anchor": "middle",
+                 "font-size": 9.5, fill: css("--muted") }, svg).textContent = label;
+  };
+  band(0.07, 0.10, "public equity required return");
+  band(0.15, 0.30, "venture hurdle rates");
+  for (const t of [0.05, 0.1, 0.25, 0.5, 1, 2, 4]) {
+    el("line", { x1: X(t), x2: X(t), y1: m.t, y2: H - m.b, stroke: css("--grid"),
+                 "stroke-width": 1 }, svg);
+    el("text", { x: X(t), y: H - m.b + 16, "text-anchor": "middle", "font-size": 10,
+                 fill: css("--muted") }, svg).textContent = Math.round(t * 100) + "%";
+  }
+  companies.forEach((c, i) => {
+    const y = m.t + (i + 0.5) * rowH;
+    const rates = cohortYears.map(yr => impliedCagr(c, yr)).filter(v => v != null)
+      .sort((a, b) => a - b);
+    const gt = DATA.ground_truth[c];
+    const realized = Math.pow(gt.latest / gt["2024-01-01"], 1 / 2.5) - 1;
+    const med = rates[Math.floor(rates.length / 2)];
+    el("text", { x: m.l - 12, y: y + 4, "text-anchor": "end", "font-size": 12,
+                 fill: css("--text-primary"), "font-weight": 600 }, svg)
+      .textContent = { "Alphabet (Google)": "Alphabet", "Meta Platforms": "Meta" }[c] || c;
+    el("line", { x1: X(rates[0]), x2: X(rates[rates.length - 1]), y1: y, y2: y,
+                 stroke: blue, "stroke-width": 4, opacity: 0.4,
+                 "stroke-linecap": "round" }, svg);
+    el("line", { x1: X(rates[rates.length - 1]) + 8, x2: X(realized) - 10, y1: y, y2: y,
+                 stroke: css("--muted"), "stroke-width": 1.2,
+                 "stroke-dasharray": "3,3" }, svg);
+    const dot = (x, color, tip) => {
+      const g = el("circle", { cx: x, cy: y, r: 6.5, fill: color,
+                               stroke: css("--surface-1"), "stroke-width": 2 }, svg);
+      g.addEventListener("mousemove", (evt) => showTip(tip, evt));
+      g.addEventListener("mouseleave", hideTip);
+    };
+    dot(X(med), blue, `<div class="t-head">${c} — model forecasts</div>
+      median ${Math.round(med * 100)}%/yr (vintages span ${Math.round(rates[0] * 100)}–${Math.round(rates[rates.length - 1] * 100)}%)`);
+    dot(X(realized), red, `<div class="t-head">${c} — realized</div>
+      ${Math.round(realized * 100)}%/yr, Jan 2024 → Jul 2026`);
+  });
+}
+
+/* ---------- tails: log-log survival curves ---------- */
+function renderTails() {
+  const subjects = Object.keys(TAILS.subjects);
+  state.tailsSubject ??= "named-anthropic";
+  segButtons("tails-subject-seg", subjects, state.tailsSubject,
+    (v) => { state.tailsSubject = v; renderTails(); },
+    (v) => TAILS.subjects[v].label);
+  const s = TAILS.subjects[state.tailsSubject];
+  const models = Object.keys(s.models).sort();
+  const series = models.map((mid, i) => ({
+    label: mid.split("/")[1], color: css("--cohort-2024"),
+    width: 1.8, dots: true, direct: mid.split("/")[1],
+    points: s.ks.map(k => ({ x: Math.log10(k), y: Number(s.models[mid][String(k)]),
+      tip: `<div class="t-head">${mid.split("/")[1]}</div>
+            P(2030 value &gt; ${k}× today) = ${s.models[mid][String(k)]}%` }))
+      .filter(p => p.y > 0),
+  }));
+  // shade by index on the ordinal blue ramp for distinguishability
+  const ramp = ["--cohort-2021", "--cohort-2023", "--cohort-2024", "--cohort-2025",
+                "--cohort-2026", "--fam-5"];
+  series.forEach((sr, i) => { sr.color = css(ramp[i % ramp.length]); });
+
+  lineChart(document.getElementById("tails-chart"), series, {
+    width: 1080, height: 400, rightPad: 110,
+    xTicks: s.ks.map(k => ({ x: Math.log10(k), label: k + "×" })),
+    xDomain: [Math.log10(s.ks[0]) - 0.06, Math.log10(s.ks[s.ks.length - 1]) + 0.3],
+    ariaLabel: `survival probabilities for ${s.label}`,
+    yFmt: (v) => (v >= 1 ? v : v.toFixed(v >= 0.1 ? 1 : 2)) + "%",
+  });
+}
+
 /* ---------- distributions: p10-p90 intervals + P(below) bars ---------- */
 function distSvg(container, W, H, ariaLabel) {
   container.innerHTML = "";
@@ -445,14 +549,15 @@ function renderMethod() {
 }
 
 function renderAll() {
-  renderHeadline(); renderDistributions(); renderCalibration(); renderExplorer();
-  renderEvolution(); renderTable(); renderMethod();
+  renderHeadline(); renderGrowth(); renderTails(); renderDistributions();
+  renderCalibration(); renderExplorer(); renderEvolution(); renderTable(); renderMethod();
 }
 
-Promise.all([fetch("data.json"), fetch("probe.json"), fetch("calib.json")])
+Promise.all([fetch("data.json"), fetch("probe.json"), fetch("calib.json"),
+             fetch("tails.json")])
   .then(rs => Promise.all(rs.map(r => r.json())))
-  .then(([d, p, c]) => {
-    DATA = d; PROBE = p; CALIB = c;
+  .then(([d, p, c, t]) => {
+    DATA = d; PROBE = p; CALIB = c; TAILS = t;
     renderAll();
     matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
   });
