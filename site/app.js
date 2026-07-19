@@ -4,7 +4,7 @@
 
 const NS = "http://www.w3.org/2000/svg";
 const tooltip = document.getElementById("tooltip");
-let DATA = null, PROBE = null;
+let DATA = null, PROBE = null, CALIB = null;
 let state = { company: "OpenAI", evoCompany: "OpenAI", evoTarget: "2030-01-01",
               distQuestion: "named-anthropic" };
 
@@ -366,6 +366,50 @@ function renderDistributions() {
   });
 }
 
+/* ---------- calibration: stacked bucket bars ---------- */
+function renderCalibration() {
+  const BUCKETS = ["below p10", "p10-p50", "p50-p90", "above p90"];
+  const colors = [css("--cohort-2021"), css("--cohort-2023"), css("--cohort-2025"),
+                  css("--actual")];
+  document.getElementById("calib-legend").innerHTML = BUCKETS.map((b, i) =>
+    `<span class="item"><span class="swatch" style="background:${colors[i]};height:10px;width:14px;border-radius:3px"></span>${b}</span>`
+  ).join("");
+
+  const rows = [
+    ["Perfectly calibrated (reference)", CALIB.perfect],
+    ["All models pooled", CALIB.overall],
+    ["Private (OpenAI, Anthropic)", CALIB.by_kind.private],
+    ["Public (NVDA, GOOGL, META)", CALIB.by_kind.public],
+    ...Object.entries(CALIB.by_model).map(([m, s]) => [m.split("/")[1], s]),
+  ];
+  const W = 1080, rowH = 34, m = { l: 250, r: 56, t: 6 };
+  const H = rows.length * rowH + m.t + 6;
+  const svg = distSvg(document.getElementById("calib-chart"), W, H,
+                      "calibration bucket shares per model");
+  rows.forEach(([label, s], ri) => {
+    const y = m.t + ri * rowH;
+    el("text", { x: m.l - 10, y: y + 19, "text-anchor": "end", "font-size": 11,
+                 fill: css("--text-secondary"),
+                 "font-style": ri === 0 ? "italic" : "normal" }, svg).textContent = label;
+    let x = m.l;
+    BUCKETS.forEach((b, bi) => {
+      const w = (s[b] || 0) * (W - m.l - m.r);
+      if (w <= 0) { return; }
+      el("rect", { x, y: y + 5, width: Math.max(w - 2, 1), height: 20, rx: 3,
+                   fill: colors[bi], opacity: ri === 0 ? 0.45 : 1 }, svg);
+      if ((s[b] || 0) >= 0.08)
+        el("text", { x: x + w / 2, y: y + 19, "text-anchor": "middle", "font-size": 10,
+                     "font-weight": 600,
+                     fill: bi >= 2 ? "#fff" : css("--text-primary") }, svg)
+          .textContent = Math.round(s[b] * 100) + "%";
+      x += w;
+    });
+    if (s.n)
+      el("text", { x: W - m.r + 8, y: y + 19, "font-size": 10, fill: css("--muted") },
+         svg).textContent = "n=" + s.n;
+  });
+}
+
 /* ---------- table + method ---------- */
 function renderTable() {
   const t = document.getElementById("data-table");
@@ -401,14 +445,14 @@ function renderMethod() {
 }
 
 function renderAll() {
-  renderHeadline(); renderDistributions(); renderExplorer(); renderEvolution();
-  renderTable(); renderMethod();
+  renderHeadline(); renderDistributions(); renderCalibration(); renderExplorer();
+  renderEvolution(); renderTable(); renderMethod();
 }
 
-Promise.all([fetch("data.json"), fetch("probe.json")])
+Promise.all([fetch("data.json"), fetch("probe.json"), fetch("calib.json")])
   .then(rs => Promise.all(rs.map(r => r.json())))
-  .then(([d, p]) => {
-    DATA = d; PROBE = p;
+  .then(([d, p, c]) => {
+    DATA = d; PROBE = p; CALIB = c;
     renderAll();
     matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
   });

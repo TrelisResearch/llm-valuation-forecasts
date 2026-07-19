@@ -117,6 +117,16 @@ footer a { color: var(--text-secondary); }
     <div id="pbelow-chart"></div>
   </section>
 
+  <section class="card" id="calibration">
+    <h2>Hindsight calibration: where did reality land in the models’ own distributions?</h2>
+    <p class="note">For past targets (Jan 2024 → Jul 2026) we elicited full p10/p50/p90
+    distributions — unanchored, so each model forecasts from its own knowledge — and checked
+    where the realized valuation fell. A calibrated forecaster puts ~10% of outcomes above its
+    90th percentile. The observed rate is the red segment.</p>
+    <div class="legend" id="calib-legend"></div>
+    <div id="calib-chart"></div>
+  </section>
+
   <section class="card" id="explorer">
     <h2>Per-model forecasts</h2>
     <p class="note">Every model’s own median trajectory, colored by family. Hover for details.</p>
