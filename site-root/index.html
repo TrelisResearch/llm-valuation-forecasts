@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trelis Research</title>
+<meta name="description" content="Live research experiments from Trelis Research.">
+<style>
+:root { color-scheme: light dark;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --sub: #52514e;
+  --muted: #898781; --border: rgba(11,11,11,0.10); --accent: #2a78d6; }
+@media (prefers-color-scheme: dark) { :root {
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --sub: #c3c2b7;
+  --border: rgba(255,255,255,0.10); --accent: #3987e5; } }
+* { box-sizing: border-box; margin: 0; }
+body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+       background: var(--page); color: var(--ink); min-height: 100vh; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 48px 20px; }
+h1 { font-size: 1.7rem; margin-bottom: 6px; }
+p.sub { color: var(--sub); margin-bottom: 28px; }
+a.card { display: block; background: var(--surface); border: 1px solid var(--border);
+         border-radius: 10px; padding: 18px 20px; text-decoration: none;
+         color: inherit; margin-bottom: 14px; }
+a.card:hover { border-color: var(--accent); }
+a.card h2 { font-size: 1.05rem; color: var(--accent); margin-bottom: 4px; }
+a.card p { color: var(--sub); font-size: .9rem; line-height: 1.5; }
+a.card .meta { color: var(--muted); font-size: .78rem; margin-top: 8px; }
+footer { margin-top: 36px; color: var(--muted); font-size: .82rem; }
+footer a { color: var(--sub); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Trelis Research</h1>
+  <p class="sub">Live experiments and interactive results.</p>
+
+  <a class="card" href="/llm-valuation-forecasts/">
+    <h2>LLM Valuation Forecasts by Knowledge Cutoff</h2>
+    <p>Models with knowledge cutoffs from Sep 2021 to Feb 2026 forecast valuations of
+    OpenAI, Anthropic, NVIDIA, Alphabet and Meta — versus what actually happened.
+    Plus: why point estimates mislead, hindsight calibration, and what tail shapes
+    LLMs actually believe in.</p>
+    <div class="meta">July 2026 · 26 models · 2,500+ forecasts</div>
+  </a>
+
+  <footer>
+    <a href="https://trelis.com">trelis.com</a> ·
+    <a href="https://github.com/TrelisResearch">github.com/TrelisResearch</a> ·
+    <a href="https://x.com/ronankmcgovern">@ronankmcgovern</a>
+  </footer>
+</div>
+</body>
+</html>
