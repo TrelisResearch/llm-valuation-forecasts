@@ -80,7 +80,10 @@ footer a { color: var(--text-secondary); }
     February 2026, and no internet access — what OpenAI, Anthropic, NVIDIA, Alphabet and
     Meta would be worth on each January 1 from 2024 to 2030. The story in one line:
     <b>the models forecast like a finance textbook — sensible growth rates, the right
-    distribution shapes — and reality beat their expectations almost every time.</b></p>
+    distribution shapes — and reality beat their expectations almost every time</b>
+    (when we asked models for full 10th–90th percentile ranges on dates that have since
+    happened, the real valuation landed <em>above</em> the 90th percentile 69% of the
+    time; a calibrated forecaster would be beaten ~10% of the time).</p>
     <p class="sub" style="margin-top:6px">
       <a href="https://github.com/TrelisResearch/llm-valuation-forecasts">github.com/TrelisResearch/llm-valuation-forecasts</a>
       · by <a href="https://x.com/ronankmcgovern">@ronankmcgovern</a>
@@ -116,36 +119,6 @@ footer a { color: var(--text-secondary); }
     lognormal-like tails, the standard model for public equities. Hover any point for exact values.</p>
     <div class="controls"><div class="seg" id="tails-subject-seg" role="group" aria-label="Company"></div></div>
     <div id="tails-chart"></div>
-  </section>
-
-  <section class="card" id="distributions">
-    <h2>4 · So why do their answers look so rosy? Ask for one number and the risk disappears</h2>
-    <p class="note">The same model, the same question, asked two ways. Asked for a single “best
-    estimate” of a 2030 valuation (green dot), a model tells a smooth success story. Asked for
-    its full range of outcomes — 10th percentile, median, 90th percentile (blue band and dot) —
-    the same model admits enormous uncertainty, including a large chance the company is worth
-    <em>less</em> than today (dashed line). If you use an LLM’s single-number answer, you
-    inherit a forecast that quietly assumes things go well. (The green dots also sit low because
-    those questions gave no current valuation, so models anchored on older knowledge.)</p>
-    <div class="controls"><div class="seg" id="dist-question-seg" role="group" aria-label="Scenario"></div></div>
-    <div class="legend" id="dist-legend"></div>
-    <div id="dist-chart"></div>
-    <h2 style="margin-top:22px">Chance the company is worth <em>less</em> in 2030 than today — according to the models</h2>
-    <p class="note">For a fairly-priced, high-volatility asset this should sit around 35–45%
-    (shaded band) — and the models mostly agree. None of this risk is visible in any
-    single-number answer they give.</p>
-    <div id="pbelow-chart"></div>
-  </section>
-
-  <section class="card" id="calibration">
-    <h2>5 · The catch: reality beat even their generous ranges</h2>
-    <p class="note">For dates that have already happened (Jan 2024 → Jul 2026), we asked models
-    for their 10th/50th/90th percentile ranges and checked where the real valuation landed.
-    A well-calibrated forecaster is beaten above its 90th percentile ~10% of the time (top
-    reference row). It happened 69% of the time — 85% for the startups. Right theory,
-    wrong magnitude.</p>
-    <div class="legend" id="calib-legend"></div>
-    <div id="calib-chart"></div>
   </section>
 
   <section class="card" id="explorer">

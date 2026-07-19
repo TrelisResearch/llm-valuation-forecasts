@@ -542,22 +542,22 @@ function renderMethod() {
     capitalization (split-invariant). Targets at or before a model's cutoff month are excluded.
     Models that refused once were nudged once in-conversation. Actual values: funding rounds /
     tenders (OpenAI, Anthropic) and year-end market caps (NVDA, GOOGL, META), as of
-    ${DATA.ground_truth.as_of || "2026-07"}. Distribution probe: 5 models, 2 samples per
-    question, percentiles anchored on stated current valuations. Runs: ${DATA.run}, ${PROBE.run}.
+    ${DATA.ground_truth.as_of || "2026-07"}. Growth rates: log-linear fit to each cohort's
+    forecast curve. Tail probabilities and the calibration figure come from separate
+    distribution-elicitation probes (raw data in the repo). Run: ${DATA.run}.
     Code + raw data: <a href="https://github.com/TrelisResearch/llm-valuation-forecasts">TrelisResearch/llm-valuation-forecasts</a>
     · by <a href="https://x.com/ronankmcgovern">@ronankmcgovern</a>.`;
 }
 
 function renderAll() {
-  renderHeadline(); renderGrowth(); renderTails(); renderDistributions();
-  renderCalibration(); renderExplorer(); renderEvolution(); renderTable(); renderMethod();
+  renderHeadline(); renderGrowth(); renderTails();
+  renderExplorer(); renderEvolution(); renderTable(); renderMethod();
 }
 
-Promise.all([fetch("data.json"), fetch("probe.json"), fetch("calib.json"),
-             fetch("tails.json")])
+Promise.all([fetch("data.json"), fetch("tails.json")])
   .then(rs => Promise.all(rs.map(r => r.json())))
-  .then(([d, p, c, t]) => {
-    DATA = d; PROBE = p; CALIB = c; TAILS = t;
+  .then(([d, t]) => {
+    DATA = d; TAILS = t;
     renderAll();
     matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
   });
