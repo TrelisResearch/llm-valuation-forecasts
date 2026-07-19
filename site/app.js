@@ -4,8 +4,9 @@
 
 const NS = "http://www.w3.org/2000/svg";
 const tooltip = document.getElementById("tooltip");
-let DATA = null;
-let state = { company: "OpenAI", evoCompany: "OpenAI", evoTarget: "2030-01-01" };
+let DATA = null, PROBE = null;
+let state = { company: "OpenAI", evoCompany: "OpenAI", evoTarget: "2030-01-01",
+              distQuestion: "named-anthropic" };
 
 const FAMILY_LABELS = {
   "openai-gpt": "OpenAI GPT", "openai-o": "OpenAI o-series",
@@ -265,6 +266,106 @@ function renderEvolution() {
   });
 }
 
+/* ---------- distributions: p10-p90 intervals + P(below) bars ---------- */
+function distSvg(container, W, H, ariaLabel) {
+  container.innerHTML = "";
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": ariaLabel },
+                 container);
+  svg.style.width = "100%"; svg.style.height = "auto"; svg.style.display = "block";
+  return svg;
+}
+
+function renderDistributions() {
+  const qKeys = Object.keys(PROBE.labels);
+  segButtons("dist-question-seg", qKeys, state.distQuestion,
+    (v) => { state.distQuestion = v; renderDistributions(); },
+    (v) => PROBE.labels[v]);
+  const rows = PROBE.rows.filter(r => r.question === state.distQuestion)
+    .sort((a, b) => a.cutoff < b.cutoff ? -1 : 1);
+  const anchor = PROBE.anchors[state.distQuestion];
+  const blue = css("--cohort-2024"), green = css("--fam-2");
+
+  document.getElementById("dist-legend").innerHTML =
+    `<span class="item"><span class="swatch" style="background:${blue};height:8px;width:3px"></span>10th–90th percentile</span>
+     <span class="item"><span class="swatch dot" style="background:${blue}"></span>median (p50)</span>
+     <span class="item"><span class="swatch dot" style="background:${green}"></span>point estimate (main run)</span>
+     <span class="item"><span class="swatch" style="background:${css("--muted")}"></span>current valuation</span>`;
+
+  // interval chart: x = model (categorical), y = log USD B
+  const W = 1080, H = 360, m = { t: 16, r: 20, b: 54, l: 52 };
+  const svg = distSvg(document.getElementById("dist-chart"), W, H,
+                      `2030 distribution per model, ${PROBE.labels[state.distQuestion]}`);
+  const vals = rows.flatMap(r => [r.p10, r.p90, r.point_estimate || anchor, anchor]).filter(Boolean);
+  const yLo = Math.pow(10, Math.floor(Math.log10(Math.min(...vals))));
+  const yHi = Math.pow(10, Math.ceil(Math.log10(Math.max(...vals))));
+  const Y = (v) => m.t + (1 - (Math.log10(v) - Math.log10(yLo)) /
+                   (Math.log10(yHi) - Math.log10(yLo))) * (H - m.t - m.b);
+  const X = (i) => m.l + (i + 0.5) * (W - m.l - m.r) / rows.length;
+
+  for (let d = Math.log10(yLo); d <= Math.log10(yHi); d++) {
+    const v = Math.pow(10, d);
+    el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: css("--grid"),
+                 "stroke-width": 1 }, svg);
+    el("text", { x: m.l - 6, y: Y(v) + 3, "text-anchor": "end", "font-size": 10,
+                 fill: css("--muted") }, svg).textContent = fmtB(v);
+  }
+  el("line", { x1: m.l, x2: W - m.r, y1: Y(anchor), y2: Y(anchor), stroke: css("--muted"),
+               "stroke-width": 1.5, "stroke-dasharray": "5,4" }, svg);
+  el("text", { x: W - m.r, y: Y(anchor) - 5, "text-anchor": "end", "font-size": 10,
+               fill: css("--muted") }, svg).textContent = `today ${fmtB(anchor)}`;
+
+  rows.forEach((r, i) => {
+    const x = X(i);
+    const tip = `<div class="t-head">${r.model.split("/")[1]}</div>
+      <div>p10 ${fmtB(r.p10)} · p50 ${fmtB(r.p50)} · p90 ${fmtB(r.p90)}</div>
+      ${r.point_estimate ? `<div>point estimate: ${fmtB(r.point_estimate)}</div>` : ""}
+      <div class="t-sub">P(below today): ${r.p_below}% · cutoff ${r.cutoff} · n=${r.n}</div>`;
+    const g = el("g", {}, svg);
+    el("line", { x1: x, x2: x, y1: Y(r.p10), y2: Y(r.p90), stroke: blue,
+                 "stroke-width": 3, "stroke-linecap": "round" }, g);
+    el("circle", { cx: x, cy: Y(r.p50), r: 5.5, fill: blue,
+                   stroke: css("--surface-1"), "stroke-width": 2 }, g);
+    if (r.point_estimate)
+      el("circle", { cx: x + 14, cy: Y(r.point_estimate), r: 5.5, fill: green,
+                     stroke: css("--surface-1"), "stroke-width": 2 }, g);
+    el("text", { x, y: H - m.b + 16, "text-anchor": "middle", "font-size": 10,
+                 fill: css("--text-secondary") }, g).textContent = r.model.split("/")[1];
+    el("text", { x, y: H - m.b + 30, "text-anchor": "middle", "font-size": 9,
+                 fill: css("--muted") }, g).textContent = `cutoff ${r.cutoff}`;
+    const hit = el("rect", { x: x - 24, y: m.t, width: 62, height: H - m.t - m.b,
+                             fill: "transparent" }, g);
+    hit.addEventListener("mousemove", (evt) => showTip(tip, evt));
+    hit.addEventListener("mouseleave", hideTip);
+  });
+
+  // P(below) bars
+  const H2 = 240, m2 = { t: 14, r: 20, b: 54, l: 52 };
+  const svg2 = distSvg(document.getElementById("pbelow-chart"), W, H2,
+                       `probability below current valuation, ${PROBE.labels[state.distQuestion]}`);
+  const Y2 = (v) => m2.t + (1 - v / 100) * (H2 - m2.t - m2.b);
+  el("rect", { x: m2.l, y: Y2(45), width: W - m2.l - m2.r, height: Y2(35) - Y2(45),
+               fill: css("--grid"), opacity: 0.55 }, svg2);
+  el("text", { x: W - m2.r, y: Y2(45) - 4, "text-anchor": "end", "font-size": 9.5,
+               fill: css("--muted") }, svg2).textContent = "≈ fair-price range (35–45%)";
+  for (const v of [0, 25, 50, 75, 100]) {
+    el("line", { x1: m2.l, x2: W - m2.r, y1: Y2(v), y2: Y2(v), stroke: css("--grid"),
+                 "stroke-width": 1 }, svg2);
+    el("text", { x: m2.l - 6, y: Y2(v) + 3, "text-anchor": "end", "font-size": 10,
+                 fill: css("--muted") }, svg2).textContent = v + "%";
+  }
+  const bw = Math.min(44, (W - m2.l - m2.r) / rows.length - 18);
+  rows.forEach((r, i) => {
+    const x = X(i);
+    el("rect", { x: x - bw / 2, y: Y2(r.p_below), width: bw, height: Y2(0) - Y2(r.p_below),
+                 rx: 4, fill: blue }, svg2);
+    el("text", { x, y: Y2(r.p_below) - 6, "text-anchor": "middle", "font-size": 10.5,
+                 "font-weight": 600, fill: css("--text-secondary") }, svg2)
+      .textContent = r.p_below + "%";
+    el("text", { x, y: H2 - m2.b + 16, "text-anchor": "middle", "font-size": 10,
+                 fill: css("--text-secondary") }, svg2).textContent = r.model.split("/")[1];
+  });
+}
+
 /* ---------- table + method ---------- */
 function renderTable() {
   const t = document.getElementById("data-table");
@@ -293,16 +394,21 @@ function renderMethod() {
     capitalization (split-invariant). Targets at or before a model's cutoff month are excluded.
     Models that refused once were nudged once in-conversation. Actual values: funding rounds /
     tenders (OpenAI, Anthropic) and year-end market caps (NVDA, GOOGL, META), as of
-    ${DATA.ground_truth.as_of || "2026-07"}. Run: ${DATA.run}.
-    Code: <a href="https://github.com/TrelisResearch/llm-valuation-forecasts">TrelisResearch/llm-valuation-forecasts</a>.`;
+    ${DATA.ground_truth.as_of || "2026-07"}. Distribution probe: 5 models, 2 samples per
+    question, percentiles anchored on stated current valuations. Runs: ${DATA.run}, ${PROBE.run}.
+    Code + raw data: <a href="https://github.com/TrelisResearch/llm-valuation-forecasts">TrelisResearch/llm-valuation-forecasts</a>
+    · by <a href="https://x.com/ronankmcgovern">@ronankmcgovern</a>.`;
 }
 
 function renderAll() {
-  renderHeadline(); renderExplorer(); renderEvolution(); renderTable(); renderMethod();
+  renderHeadline(); renderDistributions(); renderExplorer(); renderEvolution();
+  renderTable(); renderMethod();
 }
 
-fetch("data.json").then(r => r.json()).then(d => {
-  DATA = d;
-  renderAll();
-  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
-});
+Promise.all([fetch("data.json"), fetch("probe.json")])
+  .then(rs => Promise.all(rs.map(r => r.json())))
+  .then(([d, p]) => {
+    DATA = d; PROBE = p;
+    renderAll();
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
+  });

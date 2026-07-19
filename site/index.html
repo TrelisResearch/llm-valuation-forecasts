@@ -79,7 +79,13 @@ footer a { color: var(--text-secondary); }
     <p class="sub">The same question — “what is the valuation of X on January 1, {2024–2030}?” —
     asked of 26 models whose knowledge cutoffs span September 2021 to February 2026,
     with no internet access. Each line is a cutoff vintage: darker means the model’s
-    knowledge stops later. Red is what actually happened.</p>
+    knowledge stops later. Red is what actually happened. Below the headline:
+    why the point estimates mislead — the same models carry ~45% downside
+    probability that a single “best estimate” never shows.</p>
+    <p class="sub" style="margin-top:6px">
+      <a href="https://github.com/TrelisResearch/llm-valuation-forecasts">github.com/TrelisResearch/llm-valuation-forecasts</a>
+      · by <a href="https://x.com/ronankmcgovern">@ronankmcgovern</a>
+    </p>
   </header>
 
   <section class="card" id="headline">
@@ -88,6 +94,24 @@ footer a { color: var(--text-secondary); }
     model per question, log scale, USD billions). Targets a model could already “know” are excluded.</p>
     <div class="legend" id="headline-legend"></div>
     <div class="panels" id="headline-panels"></div>
+  </section>
+
+  <section class="card" id="distributions">
+    <h2>The flaw in point estimates: the downside mass they hide</h2>
+    <p class="note">Asked for a single “best estimate” of a 2030 valuation, models draw a smooth
+    success path. Asked for their full distribution (anchored on the same current valuation),
+    the same models place large probability on decline. The band spans each model’s 10th–90th
+    percentile with a dot at the median; the green marker is the same model’s point estimate
+    from the main experiment. Name-blinded twins test whether famous names get rosier odds
+    (mostly: no).</p>
+    <div class="controls"><div class="seg" id="dist-question-seg" role="group" aria-label="Scenario"></div></div>
+    <div class="legend" id="dist-legend"></div>
+    <div id="dist-chart"></div>
+    <h2 style="margin-top:22px">P(worth less in 2030 than today)</h2>
+    <p class="note">Each model’s stated probability that the company’s value on Jan 1, 2030 is
+    below its current valuation. A fairly-priced, venture-volatility asset sits around 35–45%
+    (shaded). Point estimates carry none of this.</p>
+    <div id="pbelow-chart"></div>
   </section>
 
   <section class="card" id="explorer">
