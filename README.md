@@ -16,7 +16,7 @@ cutoffs.
 uv run run_experiment.py                           # full run -> results/*.jsonl
 uv run analysis/aggregate.py results/run_X.jsonl   # -> site/data.json
 uv run analysis/make_assets.py                     # -> assets/*.png, *.mp4
-npx wrangler pages deploy site --project-name trelis-research  # -> research.trelis.com
+./scripts/deploy.sh   # -> research.trelis.com (index) + /llm-valuation-forecasts/
 ```
 
 Reasoning models run at standard effort (`reasoning: {effort: "medium"}`);
