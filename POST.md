@@ -38,7 +38,9 @@ NVIDIA: curved = lognormal, as a public equity should be.
 
 ## Tweet 4 — no attachment
 
-Right theory, wrong magnitude: on dates that have since happened, reality landed above the models' own 90th-percentile forecasts 69% of the time. Calibrated would be ~10%.
+On dates that have since happened, reality landed above the models' own 90th-percentile forecasts 69% of the time.
+
+Miscalibration? Not necessarily — it's one correlated draw (one AI boom), and by the models' own power-law tails, outliers are the expected surprise. One world isn't enough to reject the textbook.
 
 Interactive charts + methodology + raw data:
 research.trelis.com/llm-valuation-forecasts
@@ -47,5 +49,5 @@ research.trelis.com/llm-valuation-forecasts
 
 ## Single-tweet alternative — attach: growth_rates.png
 
-AI models forecast company valuations like a finance textbook — ~9%/yr for public companies, venture rates for startups, power-law tails and all. The textbook wasn't ready for this AI boom: reality beat their 90th percentiles 7 times out of 10.
+AI models forecast company valuations like a finance textbook — required-return growth, power-law tails and all. Then the AI boom landed in their own tail: reality beat their 90th percentiles 7 times out of 10. Outlier or miscalibration? One world can't say.
 research.trelis.com/llm-valuation-forecasts
