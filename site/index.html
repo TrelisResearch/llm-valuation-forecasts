@@ -102,8 +102,11 @@ footer a { color: var(--text-secondary); }
     success path. Asked for their full distribution (anchored on the same current valuation),
     the same models place large probability on decline. The band spans each model’s 10th–90th
     percentile with a dot at the median; the green marker is the same model’s point estimate
-    from the main experiment. Name-blinded twins test whether famous names get rosier odds
-    (mostly: no).</p>
+    from the main experiment. Note the green markers sit below the medians for a reason worth
+    knowing: the main experiment gave no anchor, so models forecast from their (stale, lower)
+    training-data knowledge of the valuation — handed the true current number, their median
+    forecast implies only ~6–10%/yr growth, close to a required rate of return. Name-blinded
+    twins test whether famous names get rosier odds (mostly: no).</p>
     <div class="controls"><div class="seg" id="dist-question-seg" role="group" aria-label="Scenario"></div></div>
     <div class="legend" id="dist-legend"></div>
     <div id="dist-chart"></div>
