@@ -34,8 +34,15 @@ footer a { color: var(--sub); }
   <h1>Trelis Research</h1>
   <p class="sub">Live experiments and interactive results.</p>
 
-  <!-- One study card intentionally removed 2026-07-21 pending finalization; its page
-       still deploys and is reachable only by direct URL. -->
+  <a class="card" href="/fresh-bpb/">
+    <h2>BPBench: which LLMs best compress fresh human text</h2>
+    <p>An LLM is a compressor — the better it models language, the fewer bits it needs to
+    encode text it's never seen. BPBench measures that as exact bits-per-byte on fresh,
+    provably-human writing published after each model's training cutoff. The best compressors
+    are open models from Chinese labs; the closed frontier is hard to benchmark at all — and
+    that's a result in itself.</p>
+    <div class="meta">July 2026 · 12 models · contamination-proof prose</div>
+  </a>
 
   <a class="card" href="/llm-valuation-forecasts/">
     <h2>LLM Valuation Forecasts by Knowledge Cutoff</h2>
